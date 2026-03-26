@@ -61,6 +61,11 @@
     <div id="terminal"></div>
 
     <script>
+
+        const LOCAL_VERSION = "1.0.0";
+        const GITHUB_VERSION_URL = "https://raw.githubusercontent.com/FurrArmy/FurrArmy-Reelmind-Corp.-Terminal/refs/heads/main/version.txt";
+        const GITHUB_SCRIPT_URL = "https://raw.githubusercontent.com/FurrArmy/FurrArmy-Reelmind-Corp.-Terminal/refs/heads/main/FurrArmy/Reelmind%20Corp.html";
+
         const terminal = document.getElementById("terminal");
 
         let user = {
@@ -3270,13 +3275,46 @@ Reelmind Leadership
             }
         }
 
+        async function autoUpdate() {
+            try {
+                printLine("Checking for updates...");
+
+                const res = await fetch(GITHUB_VERSION_URL + "?t=" + Date.now());
+                const remoteVersion = (await res.text()).trim();
+
+                if (remoteVersion !== LOCAL_VERSION) {
+                    printLine(`Update found: ${remoteVersion}`);
+                    printLine("Downloading update...");
+
+                    const scriptRes = await fetch(GITHUB_SCRIPT_URL + "?t=" + Date.now());
+                    const newScript = await scriptRes.text();
+
+                    printLine("Applying update...");
+
+                    document.open();
+                    document.write(newScript);
+                    document.close();
+                } else {
+                    printLine("System up to date.");
+                }
+
+            } catch (err) {
+                printLine("Update check failed.");
+                console.error(err);
+            }
+        }
+
         (async () => {
             await printLine("Initializing Secure Terminal...");
-            await printLine("FurrArmy / Reelmind Corp  V.1.0.1");
+            await printLine("FurrArmy / Reelmind Corp.  V.1.0.1");
             await printLine("Use: login <username> <password>");
             await printLine("Type 'help' for commands");
             newInput();
         })();
+
+        window.onload = () => {
+            autoUpdate();
+        };
     </script>
 </body>
 </html>
