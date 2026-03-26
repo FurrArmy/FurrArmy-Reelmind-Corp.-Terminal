@@ -1,0 +1,3282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FurrArmy/Reelmind Corp. Terminal</title>
+    <style>
+        body {
+            margin: 0;
+            background: black;
+            color: #00ff9f;
+            font-family: monospace;
+            overflow: hidden;
+        }
+
+        #terminal {
+            padding: 20px;
+            height: 100vh;
+            overflow-y: auto;
+            animation: flicker 2s infinite;
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.95;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .line {
+            margin: 2px 0;
+            white-space: pre-wrap;
+        }
+
+        .input-line {
+            display: flex;
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            color: #00ff9f;
+            outline: none;
+            font-family: monospace;
+            width: 100%;
+        }
+
+        .glow {
+            text-shadow: 0 0 5px #00ff9f, 0 0 10px #00ff9f;
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal"></div>
+
+    <script>
+        const terminal = document.getElementById("terminal");
+
+        let user = {
+            name: "Guest",
+            org: "Unknown",
+            division: "None",
+            rank: "Visitor",
+            clearance: 0
+        };
+
+        // USER DATABASE
+        const users = {
+            "Mike": {
+                password: "Lt.Mike",
+                name: "Mike",
+                org: "FurrArmy",
+                division: "Federal Government",
+                rank: "FGC-1",
+                clearance: 10
+            },
+            "VOR": {
+                password: "V.O.R",
+                name: "[Classified]",
+                org: "FurrArmy",
+                division: "Vanguard Operations Regiment",
+                rank: "[V-0]Shadow Candidate",
+                clearance: 9
+            },
+            "SHC": {
+                password: "SHC",
+                name: "SHC",
+                org: "FurrArmy",
+                division: "Senior High Command",
+                rank: "[SHC-1]High Command Officer",
+                clearance: 8
+            },
+            "JHC": {
+                password: "JHC",
+                name: "JHC",
+                org: "FurrArmy",
+                division: "Junior High Command",
+                rank: "[JHC-1]Deputy Operations Officer",
+                clearance: 7
+            },
+            "IA": {
+                password: "IA",
+                name: "[Classified]",
+                org: "FurrArmy",
+                division: "Intelligence Agency",
+                rank: "[IA-1]Intelligence Recruit",
+                clearance: 6.5
+            },
+            "ISD": {
+                password: "ISD",
+                name: "[Classified]",
+                org: "FurrArmy",
+                division: "Internal Service Division",
+                rank: "[ISD-1]ISD Recruit",
+                clearance: 6
+            },
+            "JD": {
+                password: "JD",
+                name: "JD",
+                org: "FurrArmy",
+                division: "Journalist Division",
+                rank: "[JD-1]Journalist Recruit",
+                clearance: 5.5
+            },
+            "MCU": {
+                password: "MCU",
+                name: "MCU",
+                org: "FurrArmy",
+                division: "Military Court Unit",
+                rank: "[MCU-6]Military Judge",
+                clearance: 5
+            },
+            "MP_TC": {
+                password: "MPTC",
+                name: "MP TC",
+                org: "FurrArmy",
+                division: "MP Trainer Command",
+                rank: "[MPTC-0]MP Instructor Candidate",
+                clearance: 4.5
+            },
+            "MP_3": {
+                password: "MP3",
+                name: "MP 3",
+                org: "FurrArmy",
+                division: "MP High Rank (Command Authority)",
+                rank: "[MP-11]Provost Officer",
+                clearance: 4.3
+            },
+            "MP_2": {
+                password: "MP2",
+                name: "MP 2",
+                org: "FurrArmy",
+                division: "MP Medium Rank (Supervisory & Investigative)",
+                rank: "[MP-6]MP Sergeant",
+                clearance: 4.2
+            },
+            "MP_1": {
+                password: "MP1",
+                name: "MP 1",
+                org: "FurrArmy",
+                division: "MP Low Rank (Patrol & Enforcement)",
+                rank: "[MP-1]MP Recruit",
+                clearance: 4
+            },
+            "12th_TR": {
+                password: "TR",
+                name: "12th FAHT",
+                org: "FurrArmy",
+                division: "12th Training Division Rank",
+                rank: "[TR-H-1]Heli Instructor Cadet",
+                clearance: 3.5
+            },
+            "6th_HR": {
+                password: "HR",
+                name: "6th FATD",
+                org: "FurrArmy",
+                division: "6th FATD High Rank Division Command",
+                rank: "[T-11]Company Commander",
+                clearance: 3
+            },
+            "4th_MR": {
+                password: "MR",
+                name: "AFC MR",
+                org: "FurrArmy",
+                division: "4th AFC Medium Rank (Active Pilots & Tactical Roles)",
+                rank: "[J-6]Jet Pilot",
+                clearance: 2
+            },
+            "GSP_LR": {
+                password: "LR",
+                name: "GSP LR",
+                org: "FurrArmy",
+                division: "GSP [Low Rank [Enlisted Infantry]]",
+                rank: "[E-1]Recruit",
+                clearance: 1
+            },
+            "Guest": {
+                password: "123",
+                name: "Guest",
+                org: "FurrArmy",
+                division: "Visitor",
+                rank: "Guest",
+                clearance: 0
+            },
+            "Travis": {
+                password: "Reelmind",
+                name: "Travis Reelmind",
+                org: "Reelmind",
+                division: "Head of Reelmind Corp.",
+                rank: "[HRC-1]Travis Reelmind",
+                clearance: 14
+            },
+            "Lt.Mike": {
+                password: "Mike",
+                name: "Lt.Mike",
+                org: "Reelmind",
+                division: "Head of Reelmind Corp.",
+                rank: "[HRC-2]Lt.Mike",
+                clearance: 14
+            },
+            "AD": {
+                password: "AD",
+                name: "[Classified]",
+                org: "Reelmind",
+                division: "Administration Division",
+                rank: "[AD-1]Administrative Assistant",
+                clearance: 13
+            },
+            "RAD": {
+                password: "R&A",
+                name: "[Classified]",
+                org: "Reelmind",
+                division: "Records & Archives Division",
+                rank: "[R&A-1]Archive Assistant",
+                clearance: 12
+            },
+            "IA": {
+                password: "IA",
+                name: "[Classified]",
+                org: "Reelmind",
+                division: "Internal Affairs",
+                rank: "[IA-1]IA Recruit",
+                clearance: 11
+            },
+            "BHD": {
+                password: "BH",
+                name: "[Classified]",
+                org: "Reelmind",
+                division: "Black Halo Division",
+                rank: "[BHD-1]Black Halo Recruit",
+                clearance: 10
+            },
+            "DSG": {
+                password: "DS",
+                name: "[Classified]",
+                org: "Reelmind",
+                division: "Protection Personnel",
+                rank: "[DSG-1]Directorate Guard Recruit",
+                clearance: 9
+            },
+            "GRD": {
+                password: "GR",
+                name: "[Classified]",
+                org: "Reelmind",
+                division: "Genetic Research Division",
+                rank: "[GRD-1]Genetic Research Intern",
+                clearance: 8
+            },
+            "AIU": {
+                password: "AI",
+                name: "[Classified]",
+                org: "Reelmind",
+                division: "Anomaly Investigation Unit",
+                rank: "[AIU-1]Anomaly Field Recruit",
+                clearance: 7
+            },
+            "PMD": {
+                password: "PM",
+                name: "PMD",
+                org: "Reelmind",
+                division: "Personal Medical Division",
+                rank: "[PMD-1]Personal Medical Intern",
+                clearance: 6
+            },
+            "CRT": {
+                password: "CRT",
+                name: "CRT",
+                org: "Reelmind",
+                division: "Response Operators [CRT]",
+                rank: "[CRT-1]Containment Recruit",
+                clearance: 5
+            },
+            "HCU": {
+                password: "HC",
+                name: "HCU",
+                org: "Reelmind",
+                division: "Hazard Response Personnel",
+                rank: "[HCU-1]Hazard Control Recruit",
+                clearance: 4.5
+            },
+            "CWD": {
+                password: "CW",
+                name: "CWD",
+                org: "Reelmind",
+                division: "Cyber Technicians",
+                rank: "[CWD-1]Cyber Recruit",
+                clearance: 4
+            },
+            "RMBST": {
+                password: "ST",
+                name: "Security Trainer",
+                org: "Reelmind",
+                division: "Reelmind Base Security Trainers",
+                rank: "[ST-1]Junior Security Trainer",
+                clearance: 3.5
+            },
+            "RMBS": {
+                password: "LR",
+                name: "Base Security",
+                org: "Reelmind",
+                division: "RBSD LR",
+                rank: "[BS-1]Security Recruit",
+                clearance: 3
+            },
+            "ETD": {
+                password: "ETD",
+                name: "Research Personnel [ETD]",
+                org: "Reelmind",
+                division: "Research Personnel [ETD]",
+                rank: "[EDT-1]Junior Research Assistant",
+                clearance: 2
+            },
+            "R_Intern": {
+                password: "RI",
+                name: "Research",
+                org: "Reelmind",
+                division: "Junior Research Division",
+                rank: "[S-1]Research Intern",
+                clearance: 1.4
+            },
+            "Medic": {
+                password: "Medic",
+                name: "Medic",
+                org: "Reelmind",
+                division: "Medical Support Staff",
+                rank: "[M-1]Medical Intern",
+                clearance: 1.3
+            },
+            "Engi": {
+                password: "EC",
+                name: "Engineer",
+                org: "Reelmind",
+                division: "Junior Engineers",
+                rank: "[E-1]Engineering Recruit",
+                clearance: 1.2
+            },
+            "Logist": {
+                password: "LC",
+                name: "Logistic",
+                org: "Reelmind",
+                division: "Logistics Personnel",
+                rank: "[L-1]Logistics Recruit",
+                clearance: 1
+            },
+            "Guest": {
+                password: "Corp",
+                name: "Guest",
+                org: "Reelmind",
+                division: "Visitor",
+                rank: "Guest",
+                clearance: 0
+            }
+        };
+
+        // DOCUMENT DATABASE
+        const documents = {
+            "FA_001": {
+                title: "Guest Information",
+                clearance: 0,
+                text: `FurrArmy – Guest Information
+Welcome to FurrArmy!
+We’re glad to have you here as a guest. Please read the information below to understand how our community works.
+
+About FurrArmy
+
+We are an Vrchat Military Furry Roleplay
+
+Guest Rules
+
+As a guest, you must follow these rules:
+
+Be respectful to all members and staff
+No spamming, trolling, or disrupting activities
+No hate speech, harassment, or inappropriate behavior
+Follow instructions from higher ranks or staff
+Do not exploit or break game/community rules
+
+How to Join FurrArmy
+
+If you enjoy your time here and want to become a member:
+
+Feel Free to Join the Discord Server
+
+https://discord.gg/Kfv8g3VEts
+
+If you Join You Can be in the Division:
+
+1. GSP Ground Service Personal
+
+2. 4th AFC  4th Air Furrs Cavalry [Jet Division]
+
+3. 6th FATD  6th Furr Army Tank Division
+
+4. 12th FAHT  12th Furr Army Helicopter Troop
+
+
+Your First Ranks:
+
+GSP= [E-1]Recruit
+
+4th= [J-1]Air Cadet
+
+6th= [T-1]Tank Recruit
+
+12th= [H-1]Heli Cadet
+
+Important Notice:
+
+
+Violating rules may result in removal from the server or a permanent ban. We aim to keep FurrArmy fun and safe for everyone.
+
+[Mike, Owner]  [Travis Reelmind, Co-Owner]  [Right Hand]
+
+Mike, Rank: FGC-1, Division: Federal Government
+
+Travis Reelmind, Rank: FGC-2, Division: Federal Government
+
+Right Hand, Rank: FGC-3, Division: Federal Government`
+            },
+            "FA_002": {
+                title: "LR Rank Tree",
+                clearance: 1,
+                text: `Low Rank Tree
+
+Classification: Level 1
+
+12th  
+
+6th   
+
+4th   
+
+GSP   
+
+
+12th LR =Low Rank (Enlisted) [H-1]-[H-5]
+
+[H-5]Senior Crewman------------------Experienced transport & combat support member
+[H-4]Junior Crewman------------------Certified basic helicopter crew member
+[H-3]Crew Assistant------------------Helps pilot & gunner during missions
+[H-2]Door Gunner Trainee-------------Assists crew, basic weapon handling
+[H-1]Heli Cadet----------------------In training, learning flight safety & troop transport basics
+
+6th LR =Low Rank Enlisted Crew [T-1]-[T-6]
+
+[T-6]Senior Crewman---------Experienced crew member
+[T-5]Driver [Pass Tank Driver Exam]  [Tank Driving Permission] = Authorized to operate tank movement systems
+[T-4]Gunner-----------------Authorized to operate main cannon
+[T-3]Loader Specialist------Responsible for ammunition handling
+[T-2]Crewman----------------Assigned to a tank crew
+[T-1]Tank Recruit-----------Basic training, no tank operation authority
+
+4th LR =Low Rank (Cadets & Ground Crew) [J-1]-[H-5]
+
+[J-5]Senior Airman----------------Certified operational support member
+[J-4]Junior Jet Specialist--------Assists in launch prep & diagnostics
+[J-3]Ground Crew Airman-----------Maintains fighter jets
+[J-2]Flight Trainee---------------Learning jet controls & air combat basics
+[J-1]Air Cadet--------------------Beginner in jet aviation training
+
+LR GSP =Low Rank [Enlisted Infantry] [E-1]-[H-5]
+
+[E-5]Corporal---------------Junior team leader
+[E-4]Specialist-------------Skilled in weapons or support roles
+[E-3]Private First Class----Experienced enlisted soldier
+[E-2]Private----------------Standard infantry soldier
+[E-1]Recruit----------------Basic training / No combat authority without supervision
+
+Important Note:
+
+You as LR need to do LR Learning Lessons
+
+[FGC-1] [FGC-2] [FGC-3]`
+            },
+            "FA_003": {
+                title: "MR Rank Tree",
+                clearance: 2,
+                text: `Medium Rank Tree
+
+Classification: Level 2
+
+12th  
+
+6th   
+
+4th   
+
+GSP   
+
+12th MR =Medium Rank (Specialists & Pilots) [H-6]-[H-10]
+
+[H-10]Squadrone Sergeant----------------Oversees multiple helicopter crews
+[H-9]Tactical Flight Specialist---------Plans air insertion/extraction
+[H-8]Air Crew Chief---------------------Leads crew inside helicopter
+[H-7]Combat Pilot-----------------------Handles armed helicopter missions
+[H-6]Transport Pilot  [Flying Permission] [OFFICIAL PILOT LICENSE CERTIFICAT Needed] [Pass Exam MR] [Can Apply for the MP Division]
+H-6 Description= Flies troop transport helicopters
+
+6th MR =Medium Rank Command Crew [T-7]-[T-10]
+
+[T-10]Operations Officer-----------Operations Officer
+[T-9]Platoon Leader----------------Platoon Leader
+[T-8]Senior Tank Commander---------Senior Tank Commander
+[T-7]Tank Commander [Pass Exam MR] [Can Apply for the MP Division]
+T-7 Description= Tank Commander
+
+4th MR =Medium Rank (Active Pilots & Tactical Roles) [J-6]-[J-10]
+
+[J-10]Squadrone Leader---------Commands a fighter squadron
+[J-9]Tactical Wingman----------Elite support pilot in formation combat
+[J-8]Strike Pilot--------------Ground-attack & precision strike specialist
+[J-7]Interceptor Pilot---------Specializes in high-speed interception
+[J-6]Jet Pilot  [Flying Permission] [OFFICIAL PILOT LICENSE CERTIFICAT Needed] [Pass Exam MR] [Can Apply for the MP Division]
+J-6 Description= Certified fighter jet operator
+    
+MR GSP =Medium Rank [Non-Commissioned Officers (NCO)] [E-6]-[E-10]
+
+[E-10]First Sergeant------------Oversees company discipline
+[E-9]Master Sergeant------------Senior enlisted advisor
+[E-8]Sergeant First Class-------Platoon-level authority
+[E-7]Staff Sergeant-------------Senior squad commander
+[E-6]Sergeant  [Can Apply for the MP Division]
+E-6 Description= Squad leader
+
+Notes:
+
+You MR can Rank up During Events!!!
+
+[FGC-1] [FGC-2] [FGC-3]`
+            },
+            "FA_004": {
+                title: "HR Rank Tree",
+                clearance: 3,
+                text: `High Rank Tree
+                
+Classification: Level 3
+
+12th
+
+6th
+
+4th
+
+GSP
+
+12th HR =High Rank (Command) [H-11]-[H-15]
+
+[H-15]Supreme Sky General  [Next Rank To Unlock is [TR-H-1] ]=Highest authority of Helicopter Troop
+[H-14]Air Marshal----------------Oversees all Furr Army air forces
+[H-13]WingCommander 12th---------Controls helicopter division
+[H-12]Air Operation Captain------Coordinates multiple air units
+[H-11]Flight Lieutenant  [ELITE ACE PILOT CERTIFICATE Needed] [Pass Exam HR]
+H-11 Des: Commands a helicopter squadron
+
+6th HR =High Rank Division Command [T-11]-[T-14]
+
+[T-14]High Armored Marshal----------Highest authority of the Tank Division
+[T-13]Division Commander------------Leader of 6th FATD
+[T-12]Battalion Commander-----------Oversees multiple companies
+[T-11]Company Commander [Pass Exam HR]
+T-11 Des: Commands tank company
+
+4th HR =High Rank (Command Structure) [J-11]-[J-15]
+
+[J-15]Supreme Air Commander  [Next Rank To Unlock is [TR-J-1] ]=Highest rank of the 4th Air Furrs Cavalry
+[J-14]High Air General---------Leads all fighter jet divisions
+[J-13]Sky Marshal--------------Strategic air combat authority
+[J-12]Wing Commander 4th-------Commands the 4th Air Wing
+[J-11]Air Cavalry Captain  [ELITE ACE PILOT CERTIFICATE Needed] [Pass Exam HR]
+J-11 Des: Oversees multiple squadrons
+
+HR GSP =High Rank [Commissioned Officers [E-11]-[E-18]
+
+[E-18]Marshal of the Army-----Highest GSP rank
+[E-17]General-----------------High Army Authority
+[E-16]Brigadier General-------Senior field command
+[E-15]Colonel-----------------Regimental commander
+[E-14]Major-------------------Battalion operations officer
+[E-13]Captain-----------------Company commander
+[E-12]First Lieutenant--------Senior platoon leader
+[E-11]Second Lieutenant-------Platoon commander
+
+Notes:
+
+You HR can Rank Up During Events!!!
+
+[FGC-1] [FGC-2] [FGC-3]`
+            },
+            "FA_005": {
+                title: "TDR Rank Tree",
+                clearance: 3.5,
+                text: `Training Division Rank Tree
+                
+Classification: Level 3.5
+
+12th
+
+6th
+
+4th
+
+GSP
+
+12th TDR = 12th Training Division Rank [TR-H-1]-[TR-H-6]
+
+[TR-H-6]Head of Air Training Command [Hand Picked]= Head of Air Training Command
+[TR-H-5]Chief Flight Examiner [Hand Picked]= Chief Flight Examiner
+[TR-H-4]Senior Air Instructor [Hand Picked]= Senior Air Instructor
+[TR-H-3]Combat Training Officer [ Next Rank is [JHC-1] ]
+TR-H-3 Des: Combat Training Officer
+[TR-H-2]Flight Instructor-------------Flight Instructor
+[TR-H-1]Heli Instructor Cadet  [OFFICIAL TRAINER CERTIFICATION Needed] [Pass Trainer Exam]
+Des: Heli Instructor Cadet
+
+6th TDR =Training Division Rank (Armored Division) [TR-T-1]-[TR-T-6]
+
+[TR-T-6]Head of Armored Training Command [Hand Picked]= Leads all training operations for the 6th FATD Training Division
+[TR-T-5]Senior Armored Doctrine Officer [Hand Picked]= Develops armored warfare strategies and updates division training protocols
+[TR-T-4]Field Evaluation Officer [Hand Picked]= Certifies trainees after live simulation exercises and combat assessments
+[TR-T-3]Combat Systems Instructor [ Next Rank is [JHC-1] ]
+TR-T-3 Des: Trains MR personnel in advanced weapon systems and armored tactics
+[TR-T-2]Armored Training Officer------Teaches tank controls, formation movement, and battlefield coordination
+[TR-T-1]Assistant Drill Instructor [OFFICIAL TRAINER CERTIFICATION Needed] [Pass Trainer Exam]
+Des: Supports cadet training and supervises basic combat drills
+
+4th TDR =4th Training Division Rank [TR-J-1]-[TR-J-6]
+
+[TR-J-6]Head of Cavalry Training Command [Hand Picked]= Head of Cavalry Training Command
+[TR-J-5]Senior Air Doctrine Officer [Hand Picked]= Senior Air Doctrine Officer
+[TR-J-4]Advanced Tactics Examiner [Hand Picked]= Advanced Tactics Examiner
+[TR-J-3]Combat Instructor Pilot [ Next Rank is [JHC-1] ]
+TR-J-3 Des: Combat Instructor Pilot
+[TR-J-2]Jet Training Officer----Jet Training Officer
+[TR-J-1]Assistant Flight Instructor  [OFFICIAL TRAINER CERTIFICATION Needed] [Pass Trainer Exam]
+Des:Assistant Flight Instructor
+
+GSP TDR = Ground Service Personal Trainer Division Rank [TR-E-1]-[TR-E-6]
+
+[TR-E-6]Supreme Training Marshal-----Highest authority of Furr Army Training Command
+[TR-E-5]Exam Authority Officer-------Authorized to issue official exam results
+[TR-E-4]Lead Trainer-----------------Oversees training events
+[TR-E-3]Certified Instructor---------Can conduct LR exams / Can recommend promotions
+[TR-E-2]Assistant Instructor---------Assists during exams & practical tests
+[TR-E-1]Training Cadet---------------Learning how to conduct exams / Cannot certify independently
+
+Notes:
+
+For HR-MR Do Events
+
+For LR Do LR Learning Lessons
+
+[FGC-1] [FGC-2] [FGC-3]
+
+
+[FGC-1] Note:
+
+!!!Dont Forget The Exams!!!`
+            },
+            "FA_006": {
+                title: "MP LR Rank Tree",
+                clearance: 4,
+                text: `MP Low Rank Tree
+
+Classification: Level 4 [Law Entforcement]
+
+LR MP =Low Rank (Patrol & Enforcement) [MP-1]-[MP-5]
+
+[MP-5]Security Response Officer-------Responds to emergency situations
+[MP-4]Field Patrol Specialist---------Handles base security operations
+[MP-3]Senior MP Officer---------------Conducts detainments & reports
+[MP-2]Military Police Officer---------Authorized to patrol & issue warnings
+[MP-1]MP Recruit----------------------Basic MP training / No arrest authority without supervision
+
+[FGC-1] [FGC-2] [FGC-3]`
+            },
+            "FA_007": {
+                title: "MP authority / Hand Book overview",
+                clearance: 4,
+                text: `Hand Book
+                
+Classification: Level 4 [Law Entforcement]
+
+| Rank Tier | Detain    | Arrest          | Suspend   | Recommend Court  |
+| --------- | --------- | --------------- | --------- | ---------------- |
+| LR        | ⚠ Limited | ❌ No            | ❌ No      | ❌ No             |
+| MR        | ✅ Yes     | ⚠ With evidence | ⚠ Limited | ✅ Yes            |
+| HR        | ✅ Yes     | ✅ Yes           | ✅ Yes     | ✅ Full Authority | 
+
+
+
+🚨 FURR ARMY MILITARY POLICE DIVISION
+MP Arrest & Discipline Handbook
+
+Classification: Official Enforcement Doctrine
+Applies To: All FAMPD Personnel
+
+I. PURPOSE
+
+The purpose of the Military Police Division is to:
+
+Maintain order and discipline
+
+Protect all Furr Army personnel
+
+Enforce official rules and regulations
+
+Conduct lawful investigations
+
+Uphold fairness and professionalism
+
+MP authority exists to protect, not intimidate.
+
+II. MP CODE OF CONDUCT
+
+All MP personnel must:
+
+Act professionally at all times
+
+Remain neutral and unbiased
+
+Use minimum force necessary
+
+Document all enforcement actions
+
+Respect chain of command
+
+Never abuse authority
+
+Violation of this code results in investigation and possible removal.
+
+III. LEVELS OF DISCIPLINARY ACTION
+🟢 Level 1 – Verbal Warning
+
+Used for:
+
+Minor misconduct
+
+First-time offenses
+
+Minor disrespect
+
+Procedure:
+
+Issue warning clearly
+
+Log warning in report system
+
+🟡 Level 2 – Formal Written Warning
+
+Used for:
+
+Repeated minor misconduct
+
+Disruptive behavior
+
+Procedure:
+
+Document incident
+
+Notify MR+ MP supervisor
+
+🟠 Level 3 – Detainment
+
+Used for:
+
+Refusal to follow lawful orders
+
+Active disruption
+
+Security risk behavior
+
+Procedure:
+
+Clearly state reason for detainment
+
+Escort subject to holding area
+
+Document incident
+
+Notify MR+ command
+🔴 Level 4 – Arrest
+
+Used for:
+
+Major rule violations
+
+Severe misconduct
+
+Threats to base security
+
+Abuse of rank
+
+Procedure:
+
+State charges clearly
+
+Secure the individual
+
+Inform HR+ MP authority
+
+File full incident report
+
+Recommend disciplinary action
+
+⚫ Level 5 – Suspension Recommendation
+
+Used for:
+
+Severe abuse of power
+
+Repeated misconduct
+
+Sabotage or corruption
+
+Only HR+ may approve suspension.
+
+IV. ARREST PROCEDURE (STANDARD PROTOCOL)
+
+Identify yourself as Military Police
+
+State the violation
+
+Give one lawful compliance opportunity
+
+If non-compliant → detain
+
+Escort safely
+
+File official report
+
+MPs must never:
+
+Arrest without reason
+
+Use personal bias
+
+Publicly humiliate suspects
+
+Ignore evidence
+
+V. USE OF FORCE POLICY
+
+Force must be:
+
+Necessary
+
+Proportional
+
+Authorized
+
+Escalation Scale:
+
+Verbal Command
+
+Warning
+
+Detainment
+
+Arrest
+
+Excessive force = automatic Internal Affairs review.
+
+VI. INTERNAL AFFAIRS & MP DISCIPLINE
+
+If an MP:
+
+Abuses authority
+
+Makes false arrests
+
+Shows bias
+
+Harasses members
+
+An Internal Affairs investigation will begin.
+
+Possible consequences:
+
+Demotion
+
+Suspension
+
+Removal from MP Division
+
+Permanent rank restriction
+
+VII. CHAIN OF AUTHORITY
+Rank Tier    Authority Level
+LR    Patrol & Warning
+MR    Arrest & Investigation
+HR    Suspension & Division Authority
+
+High Security Marshal & Inspector General have ultimate enforcement oversight.
+
+VIII. REPORTING FORMAT
+
+Every enforcement action must include:
+
+Name of subject
+
+Rank
+
+Violation committed
+
+Evidence
+
+Witnesses
+
+Action taken
+
+MP Signature
+
+Failure to document = policy violation.
+
+IX. FINAL PRINCIPLE
+
+Military Police power is built on:
+
+⚖ Fairness
+🛡️ Integrity
+📜 Discipline
+👑 Responsibility
+
+Without discipline, there is no order.
+Without fairness, there is no justice.
+
+
+[FGC-1] [FGC-2] [FGC-3]`
+            },
+            "FA_008": {
+                title: "MP MR Rank Tree",
+                clearance: 4.2,
+                text: `MP Medium Rank Tree
+
+Classification: Level 4.2 [Law Entforcement]
+
+MR MP =Medium Rank (Supervisory & Investigative) [MP-6]-[MP-10]
+
+[MP-10]Deputy Provost Officer--------Second-in-command of MP operations
+[MP-9]Provost Supervisor-------------Oversees law enforcement procedures
+[MP-8]Tactical Response Leader-------Commands rapid response units
+[MP-7]Investigation Officer----------Conducts internal investigations
+[MP-6]MP Sergeant [Pass MP MR Exam]  [Can Apply For [MCU] ]
+MP-6 Des: Leads patrol squads
+
+[FGC-1] [FGC-2] [FGC-3]`
+            },
+            "FA_009": {
+                title: "MP HR Rank Tree",
+                clearance: 4.3,
+                text: `MP High Rank Tree
+
+CLassification: Level 4.3 [Law Entforcement]
+
+HR MP =High Rank (Command Authority) [MP-11]-[MP-14]
+
+[MP-14]Inspector General of Military Justice= Highest rank within FAMPD / Oversees investigations & disciplinary law
+[MP-13]High Security Marshal  [Can Apply for ???]= Supreme authority over discipline & enforcement
+[MP-12]Chief of Military Police= Oversees all MP operations
+[MP-11]Provost Officer [Pass MP HR Exam]= Division commander of Military Police
+
+[FGC-1] [FGC-2] [FGC-3]`
+            },
+            "FA_010": {
+                title: "MPTC Rank Tree",
+                clearance: 4.5,
+                text: `MP Trainer Command Rank Tree
+                
+Classification: Level 4.5 [Law Entforcement] [MPTC]
+
+MP Trainer Command [MPTC-0]-[MPTC-5]
+
+[MPTC-5]MP Trainer General= Highest authority of Military Police Trainer Command
+[MPTC-4]Commandant of MP Training= Leads the entire MP Academy
+[MPTC-3]Training Operations Sergeant= Manages academy scheduling and instructor staff
+[MPTC-2]Senior MP Instructor= Leads classroom and field certification exams
+[MPTC-1]Junior MP Instructor= Teaches basic law & arrest procedures
+[MPTC-0]MP Instructor Candidate= Under evaluation to become certified trainer / Assists in academy drills
+
+[FGC-1] [FGC-2] [FGC-3]`
+            },
+            "FA_011": {
+                title: "MCU Ranks And Infos",
+                clearance: 5,
+                text: `Military Court Unit Ranks and Infos
+                
+Classification: Level: 5 [Law Entforcement] [MCU]
+
+Ranks:
+
+[MCU-8]Chief Military Judge
+[MCU-7]Senior Court Judge
+[MCU-6]Military Judge
+[MCU-5]Court Prosecutor
+[MCU-4]Defense Officer
+[MCU-3]Court Marshal
+[MCU-2]Evidence Officer
+[MCU-1]Court Clerk
+
+Rank Infos:
+
+🥇 TIER V – Court Command
+1️⃣ Chief Military Judge
+
+Must be MP HR
+
+Oversees all Military Court operations
+
+Approves sentencing above 30-day suspension
+
+Reports to MP High Command
+
+Only one per facility.
+
+2️⃣ Senior Court Judge
+
+Presides over MR-level trials
+
+Can issue rank suspension
+
+Can recommend demotion
+
+Oversees legal conduct
+
+⚖ TIER IV – Trial Authority
+3️⃣ Military Judge (MR+)
+
+Leads LR and minor MR hearings
+
+Determines guilt or innocence
+
+Issues penalties within authority
+
+This is the main role MR officers apply for.
+
+4️⃣ Court Prosecutor (MR+)
+
+Represents Military Police
+
+Presents evidence
+
+Works with FAISD reports
+
+Requests sentencing
+
+5️⃣ Defense Officer (MR+)
+
+Represents accused
+
+Reviews evidence integrity
+
+Ensures lawful procedure
+
+Prevents abuse of authority
+
+🛡 TIER III – Court Enforcement MR+
+6️⃣ Court Marshal
+
+Maintains order in courtroom
+
+Escorts accused
+
+Enforces sentencing
+
+Authorized to restrain
+
+7️⃣ Evidence Officer
+
+Handles documentation
+
+Maintains bodycam records
+
+Verifies timestamp logs
+
+Secures classified evidence
+
+📜 TIER II – Administrative MR+
+8️⃣ Court Clerk
+
+Schedules hearings
+
+Records verdicts
+
+Updates disciplinary logs
+
+Hierarchy Placement
+
+Supreme Command Arbiter (Owner)
+↓
+High Tribunal Executor (Co-Owner)
+↓
+Grand Court Justicar (Right Hand)
+↓
+Chief Military Judge
+↓
+Senior Court Judge
+↓
+Military Judges
+
+
+
+
+
+
+⚖ FURR ARMY MILITARY COURT SYSTEM
+
+Judicial Authority of the Furr Army
+
+Applies to all divisions:
+
+12th Helicopter Troop
+
+4th Air Furrs Cavalry
+
+6th FATD Tank Division
+
+FAGSP Ground Service
+
+All High Command Personnel
+
+I. PURPOSE OF THE MILITARY COURT
+
+The Military Court exists to:
+
+Ensure fair trials
+
+Prevent abuse of authority
+
+Maintain discipline
+
+Protect rank integrity
+
+Enforce justice across all divisions
+
+The court operates independently from standard MP patrol authority.
+
+II. COURT AUTHORITY STRUCTURE
+🟢 Court Officials (LR Tier)
+
+Court Clerk
+
+Records proceedings
+
+Maintains case files
+
+Legal Assistant
+
+Assists prosecution or defense
+
+🔵 Judicial Officers (MR Tier)
+
+Military Prosecutor
+
+Presents charges
+
+Submits evidence
+
+Defense Officer
+
+Represents accused personnel
+
+Magistrate Officer
+
+Oversees minor trials
+
+Issues minor disciplinary rulings
+
+🔴 High Judicial Command (HR Tier)
+
+Military Judge
+
+Presides over court hearings
+
+Determines verdicts
+
+Chief Military Judge
+
+Oversees all court operations
+
+High Justice Marshal
+
+Supreme legal authority
+
+Can overturn decisions
+
+Final appeal authority
+
+III. TYPES OF COURT CASES
+🟢 Minor Offense Hearings
+
+Examples:
+
+Disrespect
+
+Minor insubordination
+
+Repeated warnings
+
+Handled by: Magistrate Officer
+
+Possible outcomes:
+
+Formal warning
+
+Rank freeze
+
+Temporary restriction
+
+🟡 Major Discipline Trials
+
+Examples:
+
+Abuse of rank
+
+Reckless command decisions
+
+Repeated misconduct
+
+Handled by: Military Judge
+
+Possible outcomes:
+
+Demotion
+
+Suspension
+
+Removal from division
+
+🔴 High Command Trials
+
+Examples:
+
+Corruption
+
+Power abuse
+
+Sabotage
+
+False arrests
+
+Handled by: Chief Military Judge + High Justice Marshal
+
+Possible outcomes:
+
+Permanent removal
+
+Rank strip
+
+Command ban
+IV. TRIAL PROCEDURE
+
+Charges submitted by MP or HR
+
+Evidence collected and documented
+
+Accused is notified
+
+Defense assigned
+
+Hearing scheduled
+
+Evidence presented
+
+Final ruling announced
+
+All trials must be documented.
+
+V. RIGHTS OF THE ACCUSED
+
+Every accused member has the right to:
+
+Know the charges
+
+See evidence
+
+Speak in defense
+
+Request representation
+
+Appeal to High Justice Marshal
+
+No punishment without review.
+
+VI. APPEALS PROCESS
+
+Appeals may be requested within 48 hours.
+
+Appeal Levels:
+
+Judge Review
+
+Chief Military Judge Review
+
+High Justice Marshal (Final Decision)
+
+Decision of High Justice Marshal is final.
+
+VII. SPECIAL LEGAL RULES
+
+No MP may judge their own case
+
+No HR may remove rank without review
+
+Evidence tampering = automatic HR investigation
+
+False accusations result in disciplinary action
+
+VIII. COURT PUNISHMENT SCALE
+Level    Action
+1    Verbal Warning
+2    Formal Warning
+3    Rank Freeze
+4    Demotion
+5    Suspension
+6    Removal from Division
+7    Permanent Ban
+IX. CORE PRINCIPLE
+
+Justice in the Furr Army must be:
+
+⚖ Fair
+🛡 Controlled
+📜 Documented
+👑 Accountable
+
+Power without oversight creates corruption.
+The Military Court exists to prevent it.
+
+
+
+
+
+⚖ Court Trial Flow
+
+Charges Filed
+
+Evidence Reviewed
+
+Hearing Scheduled
+
+Prosecutor & Defense Statements
+
+Witness Testimony
+
+Judge Deliberation
+
+Verdict Issued
+
+Sentencing Recorded
+
+[FGC-1] [FGC-2] [FGC-3]`
+            },
+            "FA_012": {
+                title: "JD Rank Tree",
+                clearance: 5.5,
+                text: `Journalist Division Rank Tree
+                
+Classification: Level 5.5 [JD]
+
+[JD-6]Director of Military Media
+[JD-5]Chief Military Journalist
+[JD-4]Media Operations Officer
+[JD-3]Senior War Correspondent
+[JD-2]Field Reporter
+[JD-1]Journalist Recruit
+
+Division Role
+
+The Furr Army Journalist Division is responsible for documenting military operations, reporting important events,
+and delivering official news across the Furr Army and allied organizations like Reelmind Corporation.
+
+They serve as the official voice and historical record of the Furr Army.
+
+🎥 Main Responsibilities
+
+News Broadcasting
+
+Publish official army news
+
+report updates to soldiers and civilians
+
+Historical Documentation
+
+Record major historical events
+
+maintain archives of military campaigns
+
+Media Production
+
+produce photos and videos
+
+create documentaries about the Furr Army
+
+Public Communication
+
+deliver official announcements
+
+support alliance communication with Reelmind Corp.`
+            },
+            "FA_013": {
+                title: "[Classified]",
+                clearance: 6,
+                text: `Internal Service Division
+                
+[Classified]
+
+🔹 LR – Low Rank (Field Agents) [ISD-1]-[ISD-4]
+
+[ISD-1]ISD Recruit
+[ISD-2]Junior Internal Officer
+[ISD-3]Internal Service Officer
+[ISD-4]Senior Internal Officer
+
+🔹 MR – Mid Rank (Investigators / Supervisors) [ISD-5]-[ISD-8]
+
+[ISD-5]Lead Internal Officer
+[ISD-6]Internal Investigator
+[ISD-7]Senior Investigator
+[ISD-8]Internal Operations Supervisor
+
+🔹 HR – High Rank (Command / Oversight) [ISD-9]-[ISD-12]
+
+[ISD-9]Deputy Director of Internal Service
+[ISD-10]Director of Internal Service
+[ISD-11]Chief Internal Commissioner
+[ISD-12]FAISD Commander
+
+
+
+
+
+📜 FAISD – Official Lore
+
+After the early expansion of the Furr Army, rapid growth created power… but also instability.
+
+Promotions were rising.
+Divisions were forming.
+Lockdown protocols were increasing.
+
+And with power came risk.
+
+To prevent corruption, betrayal, and internal collapse, High Command authorized the formation of a classified oversight body:
+
+FAISD — The Internal Service Division.
+
+They were not created to fight enemies outside the Army.
+
+They were created to protect the Army from itself.
+
+🕶 The Hidden Mandate
+
+FAISD operates under three primary directives:
+
+Internal Security Enforcement
+Monitoring divisions for misconduct or disloyalty.
+
+Command Integrity Audits
+Investigating abuse of authority across LR, MR, and HR ranks.
+
+Crisis Stabilization Protocol
+During Code Red or Code Black, FAISD ensures loyalty inside the base.
+
+⚠ The Incident That Changed Everything
+
+Rumors speak of an early internal breach during a Level 4 emergency.
+
+An officer failed to follow lockdown procedure.
+
+Security doors remained open.
+
+The base nearly collapsed.
+
+From that day forward, FAISD authority expanded.
+
+No rank became immune to oversight.
+
+Not even Command.
+
+🔒 Clearance System
+
+FAISD operates on classified clearance levels:
+
+White Clearance – Basic Information
+
+Yellow Clearance – Operational Review Access
+
+Orange Clearance – Internal Case Files
+
+Red Clearance – Command Oversight
+
+Black Clearance – Restricted. Eyes Only.
+
+Only FAISD HR ranks may access Black files.
+
+🛡 Relationship With Other Divisions
+
+GSP respects FAISD — but fears investigations.
+
+MP cooperates with FAISD — but does not control them.
+
+AFC oversees the Army — but FAISD can investigate AFC.
+
+4th AFC & 12th FAHT provide transport when FAISD requires rapid intervention.
+
+FAISD does not request permission.
+
+They notify.
+
+🕯 Public vs Reality
+
+Officially:
+
+FAISD ensures discipline and order.
+
+Unofficially:
+
+FAISD ensures survival of the Army.
+
+🔥 Cinematic Tagline
+
+“Loyalty is proven.
+Discipline is enforced.
+Integrity is monitored.”`
+            },
+            "FA_014": {
+                title: "[Classified]",
+                clearance: 6.5,
+                text: `Intelligence Agency
+                
+[Classified]
+
+“Knowledge Is Power.”
+
+🔹 LR – Intelligence Operatives (Entry & Field Level) [AI-1]-[IA-4]
+
+[AI-1]Intelligence Recruit
+[AI-2]Junior Intelligence Operative
+[AI-3]Field Intelligence Officer
+[AI-4]Signals Intelligence Specialist
+
+🔹 MR – Analysts & Tactical Planners [AI-5]-[IA-9]
+
+[AI-5]Senior Intelligence Officer
+[AI-6]Lead Field Agent
+[AI-7]Intelligence Analyst
+[AI-8]Operations Planner
+[AI-9]Section Chief
+
+🔹 HR – Strategic Command Level [AI-10]-[IA-14]
+
+[AI-10]Deputy Director of Intelligence
+[AI-11]Director of Intelligence Operations
+[AI-12]Chief Strategic Analyst
+[AI-13]Intelligence Commander
+[AI-14]Director-General of FAIA
+
+
+🧩 FAIA Core Responsibilities
+
+External threat monitoring
+
+Recon operations
+
+Cyber surveillance
+
+Tactical battlefield intelligence
+
+Threat prediction
+
+Code escalation recommendations
+
+FAIA is usually the first to recommend:
+
+Code Yellow
+
+Code Orange
+
+Code Red
+
+They see the threat before others do.
+
+🔒 Clearance Structure (Optional Add-On)
+
+FAIA members operate under classified levels:
+
+Level I – Restricted
+
+Level II – Tactical
+
+Level III – Strategic
+
+Level IV – Command Access
+
+Level V – Black Archive
+
+Only Director-General level can access Level V.
+
+🔥 Motto Ideas
+
+“Information Wins Wars.”
+
+“We See First.”
+
+“Silent. Aware. Precise.”
+
+“From Shadows, We Guide.”
+
+“The Battle Begins With Intelligence.”
+
+Now your Army structure is becoming advanced:
+
+GSP – Main Army
+
+MP – Military Police
+
+AFC – High Command
+
+4th AFC – Jet Division
+
+6th FATD – Tank Division
+
+12th FAHT – Helicopter Troop
+
+FAISD – Internal Oversight
+
+FAIA – Intelligence Agency
+
+
+
+
+
+
+
+
+📜 Origin of FAIA
+
+Before the Furr Army became a structured force…
+
+Threats were reacted to — not predicted.
+
+Raids caught divisions unprepared.
+Lockdowns were triggered too late.
+Command decisions were made without full information.
+
+After a near-catastrophic security breach during an early expansion phase, High Command realized something critical:
+
+Strength without intelligence is weakness.
+
+From that realization, FAIA was born.
+
+Not as a combat unit.
+Not as police.
+But as the mind of the Army.
+
+🕶 The Silent Network
+
+FAIA operates quietly.
+
+They monitor:
+
+External military groups
+
+Rival armies
+
+Internal communication patterns
+
+Base security vulnerabilities
+
+Cyber threats
+
+Escalation risks
+
+Most soldiers never see FAIA working.
+
+But FAIA sees everyone.
+
+⚠ The First Intelligence Crisis
+
+Classified archives speak of an incident known only as:
+
+“The 7-Minute Delay.”
+
+An unknown hostile group attempted a coordinated infiltration.
+
+FAIA intercepted fragmented signals.
+
+Analysis predicted a 7-minute window before breach.
+
+That early warning allowed:
+
+GSP to mobilize
+
+12th FAHT to prepare air support
+
+6th FATD to secure heavy access points
+
+The attack failed.
+
+From that day, FAIA authority expanded.
+
+🔒 The Black Archive
+
+Deep within the command structure exists:
+
+The Black Archive.
+
+Files marked:
+
+Unconfirmed threats
+
+Internal risk assessments
+
+High Command vulnerability projections
+
+Future escalation models
+
+Only the Director-General of FAIA and select AFC leaders have access.
+
+Some say FAIA already knows the next crisis before it begins.
+
+🧩 Relationship With Other Divisions
+
+GSP fights the battles.
+
+FATD breaks the lines.
+
+FAHT deploys rapidly.
+
+4th AFC controls the sky.
+
+MP enforces law.
+
+FAISD protects internal order.
+
+But FAIA decides when those forces move.
+
+They recommend Code Yellow.
+They predict Code Red.
+They prepare for Code Black.
+
+🌑 Rumors & Theories
+
+Whispers circulate inside the Army:
+
+FAIA has undercover agents embedded in every division.
+
+Some promotions are influenced by intelligence reports.
+
+FAIA may test loyalty without soldiers knowing.
+
+Certain “training scenarios” were never training at all.
+
+Officially, these rumors are denied.
+
+Unofficially… no one knows.
+
+🔥 Cinematic Tagline
+
+“Wars are not won on the battlefield.
+They are won in information.”`
+            },
+            "FA_015": {
+                title: "JHC Rank Tree",
+                clearance: 7,
+                text: `Junior High Command Tree
+                
+Classification: Level: 7
+
+[JHC-3]Air & Ground Coordinator [Highest possible rank]= Coordinates jets, helicopters, and tanks
+[JHC-2]Strategic Liaison Officer= Connects 12th, 4th, and 6th divisions
+[JHC-1]Deputy Operations Officer= Assists division commanders and Oversees cross-division coordination`
+            },
+            "FA_016": {
+                title: "SHC Rank Tree",
+                clearance: 8,
+                text: `Senior High Command Tree
+                
+Classification: Level: 8
+
+[SHC-3]Supreme Tactical Commander= Authority over large-scale operations
+[SHC-2]Chief of Division Operations= Supervises all division commanders
+[SHC-1]High Command Officer= Senior strategic planner`
+            },
+            "FA_017": {
+                title: "[Classified]",
+                clearance: 9,
+                text: `VOR Tree
+
+[V-10]Grand High Commander
+[V-9]Obsidian Prime
+[V-8]Obsidian Arbiter
+[V-7]Vanguard Marshal
+[V-6]Black Directive Officer
+[V-5]Cell Commander
+[V-4]Vanguard Operator
+[V-3]Silent Operator
+[V-2]Silent Analyst
+[V-1]Ghost Archivist
+[V-0]Shadow Candidate
+
+
+
+🜏 TIER VII – Grand Command Oversight
+1️⃣ Grand High Commander (External Authority)
+
+Supreme authority over Vanguard
+
+Can appoint or remove Obsidian Prime
+
+Holds Black Key Prime
+
+Cannot be countermanded
+
+(This rank is outside F.A.V.O.R. but above it.)
+
+⚫ TIER VI – Black Chamber Command
+2️⃣ Obsidian Prime
+
+Supreme Commander of Vanguard
+
+Direct voice of Grand High Command
+
+Controls Black Activation Protocol
+
+Can authorize Warhead Lock Intervention
+
+Only one.
+
+3️⃣ Obsidian Arbiter (×4)
+
+Strategic execution authority
+
+Each controls a Black Key Fragment
+
+Approve major neutralization operations
+
+Can activate multi-cell deployment
+
+⚔ TIER V – Strategic Operations
+4️⃣ Vanguard Marshal
+
+Oversees all field and cyber divisions
+
+Executes Council decisions
+
+Controls operational readiness state
+
+5️⃣ Black Directive Officer
+
+Mission architects
+
+Counterintelligence planners
+
+Crisis scenario simulation commanders
+
+🩸 TIER IV – Field Command
+6️⃣ Cell Commander
+
+Leads 3–5 operator unit
+
+Autonomous engagement authority
+
+Can authorize lethal force without delay
+
+Direct uplink to Vanguard Marshal
+
+Callsign: VC-01, VC-02, etc.
+
+🩶 TIER III – Operators
+7️⃣ Vanguard Operator
+
+Elite tactical operative
+
+Trained in:
+
+Counterintelligence
+
+Facility reclamation
+
+Close quarters combat
+
+Warhead security systems
+
+Callsign format: V-11, V-24, etc.
+
+8️⃣ Silent Operator
+
+Stealth and infiltration specialist
+
+Data extraction
+
+Target tracking
+
+Internal surveillance
+
+No public callsign.
+
+🧠 TIER II – Intelligence & Control
+9️⃣ Silent Analyst
+
+Oversees digital warfare
+
+Monitors FAIA & FAISD channels
+
+Verifies Warhead code integrity
+
+Can freeze command logs
+
+🔟 Ghost Archivist
+
+Maintains erased records
+
+Controls identity nullification
+
+Protects Obsidian-level secrets
+
+They do not deploy.
+
+They remember.
+
+🜂 TIER I – Initiate
+1️⃣1️⃣ Shadow Candidate
+
+Selected, not applied
+
+Undergoes identity erasure
+
+Completes “Black Silence Trial”
+
+Failure = reassignment
+Success = record deletion + rank assignment
+
+⚫ Special Operational Status
+☠ The Null
+
+Activated only during catastrophic internal collapse
+
+Answers directly to Obsidian Prime
+
+Can override Cell Commanders
+
+Exists outside normal hierarchy
+
+Only one active at a time.
+
+🔐 Rank Philosophy
+
+No visible insignia
+
+Authority verified by encrypted key signature
+
+Lower visible rank may outrank higher if holding a higher Black Key
+
+Orders authenticated via Black Chamber Cipher`
+            },
+            "FA_018": {
+                title: "[Classified]",
+                clearance: 9,
+                text: `VOR Infos
+                
+[Classified]
+
+
+Vanguard Operations Regiment
+
+Direct Authority: Grand High Command (GHC)
+Status: Black-Omega Classified
+
+🏛 Command Alignment
+
+F.A.V.O.R. does NOT answer to:
+
+MP High Command
+
+FAISD
+
+FAIA
+
+Division Generals
+
+They answer only to:
+
+👑 Grand High Command
+
+Orders flow like this:
+
+Grand High Command
+↓
+Obsidian Prime
+↓
+Vanguard Marshal
+↓
+Operational Cells
+
+No lateral interference permitted.
+
+⚫ Structural Adjustment
+
+Since they’re under GHC, the Obsidian Council becomes:
+
+🜏 The Black Chamber
+🔹 Obsidian Prime
+
+Personally appointed by Grand High Command
+
+Holds Black Key Alpha
+
+Can act in the name of GHC during total communication failure
+
+🔹 Four Obsidian Arbiters
+
+Advisors to Prime
+
+Tactical and strategic execution planners
+
+Each holds a fragment of Warhead Lock Override
+
+They do NOT outvote Grand High Command.
+They execute its will.
+
+🔐 Authority Level
+
+When F.A.V.O.R. activates:
+
+HR officers cannot countermand them
+
+FAISD investigations are suspended
+
+FAIA data streams are mirrored automatically
+
+Warhead launch requires their presence
+
+They are the enforcement of final order.
+
+🩸 Political Position in Lore
+
+Officially:
+
+“F.A.V.O.R. is a specialized rapid response unit.”
+
+Reality:
+
+They are the contingency plan if the Army fractures.
+
+Grand High Command created them after:
+
+The first internal corruption crisis
+
+A near Warhead misfire event
+
+A command betrayal during Code Red
+
+They are insurance.
+
+🜂 Special Clause
+
+If Grand High Command is compromised…
+
+Obsidian Prime may invoke:
+
+⚫ BLACK THRONE DIRECTIVE
+
+Temporary autonomous authority
+Until GHC integrity is restored
+
+This is logged once in history.
+
+No records remain.
+
+🔥 Their Motto (Updated)
+
+“By Command. Through Shadow.”`
+            },
+            "RM_001": {
+                title: "Guest Infos",
+                clearance: 0,
+                text: `Reelmind Corp. – Guest Information
+Welcome to Reelmind Corp.!
+We’re glad to have you here as a guest. Please read the information below to understand how our community works.
+
+About Reelmind Corp.
+
+We are an Vrchat Roleplay
+
+Guest Rules
+
+As a guest, you must follow these rules:
+
+Be respectful to all members and staff
+No spamming, trolling, or disrupting activities
+No hate speech, harassment, or inappropriate behavior
+Follow instructions from higher ranks or staff
+Do not exploit or break game/community rules
+
+How to Reelmind Corp.
+
+If you enjoy your time here and want to become a member:
+
+Feel Free to Join the Discord Server
+
+https://discord.gg/64uh5gs9bf
+
+If you Join You Can be in the Division:
+
+1. [BS-1]Base Security 
+
+2. [S-1]Scientist
+
+3. [M-1]Medical Department
+
+4. [E-1]Engineering Corps
+
+5. [L-1]Logistics Command
+
+Your First Ranks:
+
+Base Security= Security Recruit
+
+Scientist= Research Intern
+
+Medical Department= Medical Intern
+
+Engineering Corps= Engineering Recruit
+
+Logistics Command= Logistics Recruit
+
+Important Notice:
+
+
+Violating rules may result in removal from the server or a permanent ban. We aim to keep FurrArmy fun and safe for everyone.
+
+[Reelmind Corp.]`
+            },
+            "RM_002": {
+                title: "Logistics Rank Tree",
+                clearance: 1,
+                text: `Rank Tree Logistic
+                
+Classification: Level 1
+
+Logistics Personnel [L-1]-[L-4]
+
+[L-1]Logistics Recruit
+[L-2]Supply Assistant
+[L-3]Warehouse Operator
+[L-4]Transport Operator
+
+Duties
+Manage supply crates
+Load/unload vehicles
+Basic inventory tracking
+
+
+Logistics Specialists [L-5]-[L-8]
+
+[L-5]Supply Specialist
+[L-6]Transport Coordinator
+[L-7]Logistics Supervisor
+[L-8]Senior Logistics Officer
+
+Duties
+Coordinate supply deliveries
+Manage supply depots
+Oversee LR personnel
+
+Logistics Command [L-9]-[L-11]
+
+[L-9]Logistics Operations Commander
+[L-10]Director of Logistics
+[L-11]Chief Logistics Commander
+
+[Reelmind Corp.]`
+            },
+            "RM_003": {
+                title: "Engineering Corp Rank Tree",
+                clearance: 1.2,
+                text: `Rank Tree Engineers
+                
+Classification: Level 1.2
+
+Junior Engineers [E-1]-[E-4]
+
+[E-1]Engineering Recruit
+[E-2]Junior Technician
+[E-3]Field Mechanic
+[E-4]Systems Technician
+
+Role:
+Basic repairs
+Assist senior engineers
+Maintain equipment
+
+Professional Engineers [E-5]-[E-8]
+
+[E-5]Engineering Specialist
+[E-6]Systems Engineer
+[E-7]Infrastructure Engineer
+[E-8]Senior Systems Engineer
+
+Role:
+Maintain facility systems
+Repair security doors, alarms, reactors
+Lead small engineering teams
+
+Command Engineers [E-9]-[E-11]
+
+[E-9]Chief Systems Engineer
+[E-10]Engineering Operations Commander
+[E-11]Director of Engineering
+
+Role:
+Oversee entire facility infrastructure
+Approve large repairs and upgrades
+Manage all engineering personnel
+
+[Reelmind Corp.]`
+            },
+            "RM_004": {
+                title: "Medic Rank Tree",
+                clearance: 1.3,
+                text: `Rank Tree Medic
+                
+Classification: Level 1.3
+
+Medical Support Staff [M-1]-[M-3]
+
+[M-1]Medical Intern
+raining medic
+Assists doctors and nurses
+
+[M-2]Medical Assistant
+Helps with basic treatment
+Supports medical staff during emergencies
+
+[M-3]Field Medic
+Responds to injuries in the facility
+Works closely with Security teams
+
+Medical Professionals [M-4]-[M-6]
+
+[M-4]Nurse
+Provides patient care
+Assists in surgeries and treatment
+
+[M-5]Senior Medic
+Experienced emergency responder
+Supervises Field Medics
+
+[M-6]Medical Officer ---------------------------[Can Apply [PM-1] ][Send Apply Request in ⁠Discord Server]
+Handles advanced treatment
+Responsible for medical decisions during incidents
+
+Medical Command [M-7]-[M-8]
+
+[M-7]Head Medic
+Leads the medical team
+Oversees the medical bay operations
+
+[M-8]Chief Medical Officer
+Highest medical authority in the facility
+Reports directly to Facility Administration
+
+[Reelmind Corp.]`
+            },
+            "RM_005": {
+                title: "Research Rank Tree",
+                clearance: 1.4,
+                text: `Rank Tree Research
+                
+Classification: Level 1.4
+
+Junior Research Division [S-1]-[S-3]
+
+[S-1]Research Intern
+New scientists learning procedures
+Assists with experiments and documentation
+
+[S-2]Junior Scientist
+Performs small-scale experiments
+Works under supervision
+
+[S-3]Scientist
+Performs small-scale experiments
+Works under supervision
+
+Advanced Research Division [S-4]-[S-6]
+
+[S-4]Senior Scientist
+Leads small research projects
+Supervises Junior Scientists
+
+[S-5]Lead Scientist
+Oversees research teams
+Responsible for experiment approvals
+
+[S-6]Principal Scientist  ----------------[Can Apply For [ETD-1] [Send Apply Request in ⁠Discord Server ]
+Designs complex experiments
+Works closely with facility leadership
+
+Executive Research Division[S-7]-[S-8]
+
+[S-7]Research Director
+Manages multiple research teams
+Authorizes high-risk experiments
+
+[S-8]Chief Science Officer
+Head of all scientific operations
+Reports directly to Facility Administration
+
+[Reelmind Corp.]`
+            },
+            "RM_006": {
+                title: "Experimental Technology Division (ETD) Rank Tree",
+                clearance: 2,
+                text: `ETD Rank Tree
+                
+Classifcation: Level 2
+
+Research Personnel [ETD] [ETD-1]-[ETD-4]
+
+[ETD-1]Junior Research Assistant
+[ETD-2]Technology Technician
+[ETD-3]Prototype Technician
+[ETD-4]Field Testing Assistant
+Duties
+Assist scientists
+Build prototypes
+Prepare testing environments
+Record experiment results
+
+Technology Specialists [ETD] [ETD-5]-[ETD-8]
+
+[ETD-5]Research Specialist
+[ETD-6]Prototype Engineer
+[ETD-7]Experimental Systems Analyst
+[ETD-8]Senior Technology Officer
+Duties
+Design experimental systems
+Manage prototype development
+Lead testing operations
+Oversee LR personnel
+
+Research Command [ETD] [ETD-9]-[ETD-11]
+
+[ETD-9]Experimental Operations Commander
+[ETD-10]Director of Experimental Technology
+[ETD-11]Chief Science Commander
+Duties
+Approve research projects
+Control classified technology programs
+Coordinate with High Command
+
+[Reelmind Corp.]`
+            },
+            "RM_007": {
+                title: "Reelmind Base Security Rank Tree",
+                clearance: 3,
+                text: `RMBS Rank Tree
+
+Classification: Level 3
+
+RBSD LR [BS-1]-[BS-3]
+
+[BS-1]Security Recruit
+Training stage
+Learning patrol routes and protocols
+
+[BS-2]Security Guard
+Basic patrol duties
+Monitors entrances and checkpoints
+
+[BS-3]Senior Security Guard
+Experienced guard
+Assists new recruits
+Handles minor incidents
+
+RBSD MR [BS-4]-[BS-6]-----------[Can Apply For [CWD-1] ][Send Apply Request in Discord Server ]
+
+[BS-4]Security Specialist
+Advanced patrol duties
+Handles restricted access zones
+
+[BS-5]Security Supervisor
+Leads patrol teams
+Coordinates guards during incidents
+
+[BS-6]Security Lieutenant
+Manages shift operations
+Reports directly to command staff
+
+RBSD HR [BS-7]-[BS-9]-----------[Can Apply For [HCU-1] ][Send Apply Request in ⁠Discord Server ]
+
+[BS-7]Security Captain
+Oversees multiple patrol teams
+Responsible for facility sectors
+
+[BS-8]Security Major
+Coordinates large security operations
+Works with command divisions
+
+[BS-9]Security Commander
+Controls overall base security
+Approves lockdown protocols
+
+RBSD Command Ranks [BS-10]-[BS-11]
+
+[BS-10]Chief of Base Security
+Leader of the Base Security Division
+Direct advisor to facility leadership
+
+[BS-11]Director of Security Operations
+Oversees all security strategy
+Works with ownership and high command
+                
+[Reelmind Corp.]`
+            },
+            "RM_008": {
+                title: "Reelmind Base Security Trainers",
+                clearance: 3.5,
+                text: `RMBST Rank Tree
+                
+Classification: Level 3.5
+
+Reelmind Base Security Trainers [ST-1]-[ST-4]
+
+[ST-1]Junior Security Trainer
+Assist training sessions
+Help recruits during simulations
+Run basic patrol training
+Support Senior Trainers
+
+[ST-2]Security Trainer
+Lead recruit training
+Conduct patrol and response drills
+Run written exams
+Approve Recruit → Guard promotions
+
+[ST-3]Senior Security Trainer
+Lead advanced training programs
+Train MR personnel
+Certify new trainers
+Oversee training standards
+
+[ST-4]Chief Training Officer
+Head of all Base Security training
+Designs training programs
+Approves trainer appointments
+Reports to Chief of Base Security
+
+[Reelmind Corp.]`
+            },
+            "RM_009": {
+                title: "Cyber Warfare Division",
+                clearance: 4,
+                text: `CWD Rank Tree
+             
+Classification: Level 4
+
+Cyber Warfare Division
+
+Division Role:
+Protect and control all digital systems of the Furr Army and Reelmind facilities.
+Main Responsibilities
+defend military networks
+detect cyber attacks
+conduct digital warfare operations
+manage surveillance systems
+control communication infrastructure
+
+Cyber Technicians [CWD-1]-[CWD-4]
+
+[CWD-1]Cyber Recruit
+[CWD-2]Network Technician
+[CWD-3]Cyber Security Operator
+[CWD-4]Systems Monitor
+Duties
+monitor servers
+detect suspicious activity
+assist cyber specialists
+maintain digital infrastructure
+
+Cyber Specialists [CWD-5]-[CWD-8]
+
+[CWD-5]Cyber Warfare Specialist
+[CWD-6]Network Defense Officer
+[CWD-7]Cyber Intelligence Analyst
+[CWD-8]Senior Cyber Officer
+Duties
+defend networks against attacks
+perform counter-hacking operations
+track enemy cyber threats
+supervise LR personnel
+
+
+Cyber Command [CWD-9]-[CWD-11]
+
+[CWD-9]Cyber Operations Commander
+[CWD-10]Director of Cyber Warfare
+[CWD-11]Chief Cyber Strategist
+Duties
+plan digital warfare operations
+control communication security
+coordinate with Intelligence Division
+
+[Reelmind Corp.]`
+            },
+            "RM_010": {
+                title: "Hazard Control Unit",
+                clearance: 4.5,
+                text: `HCU Rank Tree
+                
+Classification: Level 4.5
+
+Hazard Response Personnel [HCU-1]-[HCU-4]
+
+[HCU-1]Hazard Control Recruit
+[HCU-2]Decontamination Specialist
+[HCU-3]Hazard Technician
+[HCU-4]Containment Operator
+Duties
+Decontaminate equipment and personnel
+Secure contaminated areas
+Assist senior teams during emergencies
+
+Hazard Specialists --------------------------[Can Apply For [CRT-1] ][Send Apply Request in ⁠Discord Server ] [HCU-5]-[HCU-8]
+
+[HCU-5]Hazard Response Specialist
+[HCU-6]Containment Supervisor
+[HCU-7]Biohazard Control Officer
+[HCU-8]Senior Hazard Officer
+Duties
+Lead containment teams
+Manage quarantine zones
+Handle chemical or biological threats
+
+Hazard Command [HCU-9]-[HCU-11]
+
+[HCU-9]Hazard Operations Commander
+[HCU-10]Director of Hazard Control
+[HCU-11]Chief Containment Commander
+Duties
+Command major hazard responses
+Coordinate with Medical Corps and Engineering
+Approve quarantine protocols
+
+[Reelmind Corp.]`
+            },
+            "RM_011": {
+                title: "Containment Response Team",
+                clearance: 5,
+                text: `CRT Rank Tree
+                
+Classification: Level 5
+
+Containment Response Team
+
+Status: Emergency Deployment Unit
+
+The Containment Response Team is an elite rapid-response force deployed when normal divisions cannot control a threat.
+Mission
+Secure containment breaches
+Neutralize dangerous entities or technology
+Assist Hazard Control Unit during major incidents
+Protect experimental facilities
+Prevent facility-wide disasters
+
+Ranks:
+
+Response Operators [CRT] [CRT-1]-[CRT-4]
+
+[CRT-1]Containment Recruit
+[CRT-2]Containment Operator
+[CRT-3]Containment Specialist
+[CRT-4]Containment Assault Operator
+Role
+Secure breach zones
+escort scientists and civilians
+assist HCU teams
+
+Tactical Specialists [CRT] [CRT-5]-[CRT-8]
+
+[CRT-5]Containment Tactical Specialist
+[CRT-6]Containment Team Leader
+[CRT-7]Containment Strike Officer
+[CRT-8]Senior Containment Officer
+Role
+lead response teams
+plan breach containment
+coordinate with MP and Security
+
+Command [CRT] [CRT-9]-[CRT-11]
+
+[CRT-9]Containment Operations Commander
+[CRT-10]Director of Emergency Containment
+[CRT-11]Chief Containment Strategist
+Role
+command large-scale containment events
+authorize lockdown procedures
+coordinate military divisions
+
+[Reelmind Corp.]`
+            },
+            "RM_012": {
+                title: "Personal Medical Division",
+                clearance: 6,
+                text: `PM Rank Tree
+      
+Classification: Level 6
+
+Personal Medical Division [PMD-1]-[PMD-4]
+
+[PMD-1]Personal Medical Intern
+Assists the Personal Doctor
+Handles medical equipment and preparation
+
+[PMD-2]Executive Medical Assistant
+Provides medical support during operations
+Monitors the health status of high command
+
+[PMD-3]Personal Physician
+Direct doctor assigned to Travis ReelMind
+Responsible for health monitoring and treatment
+Has priority medical authority during emergencies
+
+[PMD-4]Chief Personal Physician
+Senior personal doctor for the command staff
+Supervises all personal medical staff
+Reports directly to High Command
+
+[Reelmind Corp.]`
+            },
+            "RM_013": {
+                title: "Anomaly Investigation Unit",
+                clearance: 7,
+                text: `AIU Rank Tree
+                
+Classification: Level [Classified]
+
+Anomaly Investigation Unit
+Division Role:
+Investigate and document unidentified events, anomalies, experimental accidents, and unknown entities.
+
+Main Responsibilities:
+investigate strange events
+analyze anomalous technology
+document unexplained incidents
+assist containment teams
+report to High Command
+
+Anomaly Investigation Unit [AIU-1]-[AIU-6]
+
+[AIU-1]Anomaly Field Recruit
+Entry-level investigator.
+
+Duties
+assist investigations
+gather evidence
+record incident reports
+
+[AIU-2]Junior Anomaly Investigator
+First operational investigator.
+
+Duties
+conduct basic investigations
+monitor anomaly zones
+support containment teams
+
+[AIU-3]Anomaly Investigator
+Fully trained investigator.
+
+Duties
+analyze anomalies
+lead small investigation teams
+collect anomaly data
+
+[AIU-4]Senior Anomaly Investigator
+Experienced specialist.
+
+Duties
+supervise investigations
+coordinate with Hazard Control and Intelligence
+write classified reports
+
+[AIU-5]Anomaly Operations Commander
+Leads large investigation operations.
+
+Duties
+manage anomaly response teams
+authorize investigation protocols
+report to High Command
+
+[AIU-6]Director of Anomalous Research
+Highest authority of the AIU.
+
+Duties:
+oversee all anomaly investigations
+approve classified research
+
+coordinate with:
+Experimental Technology Division
+Containment Response Team
+Intelligence Agency
+
+[Reelmind Corp.]`
+            },
+            "RM_014": {
+                title: "Genetic Research Division",
+                clearance: 8,
+                text: `GRD Rank Tree
+                
+Classification: Level [Classified]
+
+Genetic Research Division
+
+Division Role:
+Conduct advanced genetic research, biological experiments, and anomaly DNA analysis for Reelmind Corporation.
+
+Main Responsibilities
+study genetic mutations
+develop biological enhancements
+analyze anomaly DNA
+support medical and experimental divisions
+create bio-defense technology
+
+Works with:
+Scientists
+Medic Division
+Anomaly Investigation Unit
+Hazard Control Unit
+Experimental Technology Division
+
+Genetic Research Division [GRD-1]-[GRD-6]
+
+[GRD-1]Genetic Research Intern
+Entry-level researcher.
+
+Duties
+assist senior scientists
+collect biological samples
+document experiments
+
+[GRD-2]Junior Genetic Researcher
+Duties
+assist genetic experiments
+analyze DNA samples
+maintain laboratory equipment
+
+[GRD-3]Genetic Scientist
+Duties
+conduct genetic experiments
+research biological anomalies
+write scientific reports
+
+[GRD-4]Senior Genetic Scientist
+Duties
+supervise research projects
+manage laboratory teams
+analyze complex genetic mutations
+
+[GRD-5]Chief Genetic Researcher
+Duties
+lead major research programs
+approve experimental procedures
+coordinate with other divisions
+
+[GRD-6]Director of Genetic Research
+Highest authority of the division.
+
+Responsibilities
+control all genetic research projects
+approve high-risk experiments
+report findings to Reelmind Leadership
+
+[Reelmind Corp.]`
+            },
+            "RM_015": {
+                title: "Directorate Security Guard",
+                clearance: 9,
+                text: `DSG Rank Tree
+                
+Classification: Level [Classified]
+
+Directorate Security Guard:
+
+Division Role:
+Provide close protection for VIPs, including directors, commanders, and important scientists.
+
+Main Responsibilities:
+Protect VIP personnel
+Escort high-ranking officials
+Secure directorate areas
+Prevent assassination attempts
+Guard classified meetings
+
+Protection Personnel [DSG-1]-[DSG-4
+
+[DSG-1]Directorate Guard Recruit
+[DSG-2]VIP Security Guard
+[DSG-3]Protection Operator
+[DSG-4]Escort Security Specialist
+Duties
+escort VIPs
+guard directorate offices
+secure meeting rooms
+monitor suspicious activity
+
+Security Specialists [DSG-5]-[DSG-8]
+
+[DSG-5]VIP Protection Specialist
+[DSG-6]Security Team Leader
+[DSG-7]Executive Protection Officer
+[DSG-8]Senior Protection Officer
+Duties
+lead escort teams
+coordinate travel security
+manage security routes
+supervise LR personnel
+
+Directorate Protection Command [DSG-9]-[DSG-11]
+
+[DSG-9]Directorate Security Commander
+[DSG-10]Chief Protection Director
+[DSG-11]Director of Executive Security
+Duties
+plan VIP security operations
+approve protection protocols
+coordinate with Military Police and Intelligence
+
+[Reelmind Corp.]`
+            },
+            "RM_016": {
+                title: "Black Halo Division",
+                clearance: 10,
+                text: `BHD Rank Tree
+                
+Classification: Level [Classified]
+
+Black Halo Division
+Division Role:
+Elite law enforcement and internal security force for the facility and army.
+
+Main Responsibilities
+arrest high-risk suspects
+suppress internal threats
+assist Military Police during major incidents
+protect classified areas
+conduct high-risk raids
+
+Black Halo Division [BHD-1]-[BHD-6]
+
+[BHD-1]Black Halo Recruit
+Entry-level member in training.
+
+Duties
+basic patrol duties
+assist senior officers
+learn tactical procedures
+
+[BHD-2]Black Halo Officer
+Fully trained enforcement officer.
+
+Duties
+arrest suspects
+patrol restricted areas
+support MP operations
+
+[BHD-3]Senior Halo Officer
+Experienced tactical officer.
+
+Duties
+lead small teams
+manage arrests
+coordinate with Military Police
+
+[BHD-4]Halo Enforcement Commander
+Tactical leader for operations.
+
+Duties
+command enforcement missions
+handle high-risk arrests
+manage security operations
+
+[BHD-5]Director of Halo Enforcement
+Leader of the division.
+
+Duties
+control division strategy
+authorize raids and investigations
+coordinate with Intelligence and Cyber Warfare
+
+[BHD-6]Supreme Halo Marshal
+Highest authority of Black Halo Division.
+
+Authority
+override normal law enforcement procedures
+command emergency enforcement operations
+report directly to Grand High Command
+
+[Reelmind Corp.]`
+            },
+            "RM_017": {
+                title: "Internal Affairs",
+                clearance: 11,
+                text: `IA Rank Tree
+                
+Classification: Level [Classified]
+
+Internal Affairs
+
+Division Role:
+Investigate misconduct, corruption, abuse of authority, and security violations within the Furr Army and all divisions.
+
+Authority:
+investigate any division
+review incident reports
+interrogate personnel
+recommend disciplinary actions
+report directly to High Command
+
+Internal Affairs [IA-1]-[IA-6]
+
+[IA-1]IA Recruit
+Entry-level investigator in training.
+
+Duties
+assist investigations
+collect reports
+observe interrogations
+
+[IA-2]Internal Affairs Investigator
+Duties
+investigate rule violations
+interview witnesses
+gather evidence
+
+[IA-3]Senior IA Investigator
+Duties
+lead investigations
+analyze disciplinary cases
+supervise investigators
+
+[IA-4]Internal Affairs Inspector
+Duties
+audit divisions
+inspect security procedures
+investigate high-ranking personnel
+
+[IA-5]IA Operations Commander
+Duties
+control major investigations
+coordinate with Military Court and MP
+approve disciplinary actions
+
+[IA-6]Director of Internal Affairs
+Highest authority of IA.
+
+Authority
+open investigations against any division
+review corruption cases
+submit cases to the Military Court System
+
+Reports directly to:
+Grand High Command
+Military Court Judges
+
+
+[Reelmind Corp.]`
+            },
+            "RM_018": {
+                title: "Records & Archives Division",
+                clearance: 12,
+                text: `RAD Rank Tree
+
+Classification: Level [Classifed]
+
+Records & Archives Division
+Division Role:
+Store, organize, and protect all official records and classified documents of Reelmind Corp.
+
+Main Responsibilities
+archive research files
+store personnel records
+protect classified documents
+maintain historical facility records
+control document access permissions
+
+Works with:
+Administration Division
+Internal Affairs
+Intelligence Agency
+Anomaly Investigation Unit
+Cyber Warfare Division
+
+Records & Archives Division [R&A-1]-[R&A-6]
+
+[R&A-1]Archive Assistant
+Entry-level archivist.
+
+Duties
+organize documents
+catalog files
+assist senior archivist
+
+[R&A-2]Records Clerk
+Duties
+maintain personnel records
+process documentation requests
+update database systems
+
+[R&A-3]Senior Archivist
+Duties
+supervise document storage
+manage classified archives
+organize historical records
+
+[R&A-4]Records Supervisor
+Duties
+oversee archive departments
+approve document access requests
+maintain archive security
+
+[R&A-5]Archive Operations Commander
+Duties
+control archive operations
+coordinate with intelligence divisions
+manage classified record storage
+
+[R&A-6]Director of Records & Archives
+Highest authority of RAD.
+
+Responsibilities
+control all document archives
+approve access to high-level classified files
+maintain long-term historical records of Reelmind Corp.
+
+Reports directly to:
+High Command
+Administration Leadership
+                
+[Reelmind Corp.]`
+            },
+            "RM_019": {
+                title: "Administration Division",
+                clearance: 13,
+                text: `AD Rank Tree
+
+Classification: Level [Classified]
+
+Administration Division
+Division Role:
+Handle administrative operations, personnel records, documentation, and coordination across all army divisions.
+
+Main Responsibilities
+manage personnel records
+organize promotions and applications
+maintain official documents
+coordinate divisions
+support High Command administration
+
+Administration Division [AD-1]-[AD-6]
+
+[AD-1]Administrative Assistant
+Entry-level administrative staff.
+
+Duties
+organize files
+assist with paperwork
+maintain basic records
+
+[AD-2]Administrative Officer
+Duties
+process promotion forms
+manage personnel documents
+assist division leadership
+
+[AD-3]Senior Administrative Officer
+Duties
+supervise administrative staff
+handle important documentation
+coordinate division records
+
+[AD-4]Administration Supervisor
+Duties
+manage administrative departments
+oversee personnel records
+ensure documentation accuracy
+
+[AD-5]Administration Operations Commander
+Duties
+coordinate administration across divisions
+approve official documents
+manage administrative operations
+
+[AD-6]Director of Administration
+Highest authority of the Administration Division.
+
+Responsibilities
+manage all administrative systems
+approve promotions and official records
+support High Command operations
+
+Reports directly to:
+Grand High Command
+Reelmind Leadership
+                
+[Reelmind Corp.]`
+            }
+        };
+
+        function printLine(text, speed = 20) {
+            return new Promise(resolve => {
+                let i = 0;
+                const line = document.createElement("div");
+                line.className = "line glow";
+                terminal.appendChild(line);
+
+                function type() {
+                    if (i < text.length) {
+                        line.textContent += text.charAt(i);
+                        i++;
+                        setTimeout(type, speed);
+                    } else {
+                        resolve();
+                    }
+                }
+                type();
+            });
+        }
+
+        function newInput() {
+            const wrapper = document.createElement("div");
+            wrapper.className = "input-line";
+
+            const input = document.createElement("input");
+            wrapper.appendChild(input);
+            terminal.appendChild(wrapper);
+
+            input.focus();
+
+            input.addEventListener("keydown", async (e) => {
+                if (e.key === "Enter") {
+                    const value = input.value;
+                    wrapper.remove();
+                    await handleCommand(value);
+                    newInput();
+                }
+            });
+        }
+
+        async function handleCommand(cmd) {
+            const args = cmd.split(" ");
+
+            if (args[0] === "login") {
+                const username = args[1];
+                const password = args[2];
+
+                const acc = users[username];
+
+                if (!acc || acc.password !== password) {
+                    await printLine("ACCESS DENIED - INVALID CREDENTIALS");
+                    return;
+                }
+
+                user = {
+                    name: acc.name,
+                    org: acc.org,
+                    division: acc.division,
+                    rank: acc.rank,
+                    clearance: acc.clearance
+                };
+
+                await printLine(`Logged in as ${user.name}`);
+                await printLine(`Organization: ${user.org}`);
+                await printLine(`Division: ${user.division}`);
+                await printLine(`Rank: ${user.rank}`);
+                await printLine(`Clearance Level: ${user.clearance}`);
+            }
+
+            else if (args[0] === "list") {
+                let found = false;
+
+                for (let key in documents) {
+                    if (key.startsWith("FA_") && user.org !== "FurrArmy") continue;
+                    if (key.startsWith("RM_") && user.org !== "Reelmind") continue;
+
+                    await printLine(`${key} | Clearance ${documents[key].clearance}`);
+                    found = true;
+                }
+
+                if (!found) {
+                    await printLine("No accessible documents for your organization");
+                }
+            }
+
+            else if (args[0] === "open") {
+                const docId = args[1];
+                const doc = documents[docId];
+
+                if (!doc) {
+                    await printLine("Document not found");
+                    return;
+                }
+
+                if (docId.startsWith("FA_") && user.org !== "FurrArmy") {
+                    await printLine("ACCESS DENIED - FurrArmy Personnel Only");
+                    return;
+                }
+
+                if (docId.startsWith("RM_") && user.org !== "Reelmind") {
+                    await printLine("ACCESS DENIED - Reelmind Corp Personnel Only");
+                    return;
+                }
+
+                if (user.clearance < doc.clearance) {
+                    await printLine("ACCESS DENIED - INSUFFICIENT CLEARANCE");
+                    return;
+                }
+
+                await printLine(`Title: ${doc.title}`);
+                await printLine(`Clearance: ${doc.clearance}`);
+                await printLine("---------------------");
+                await printLine(doc.text);
+            }
+
+            else if (args[0] === "whoami") {
+                await printLine(`User: ${user.name}`);
+                await printLine(`Org: ${user.org}`);
+                await printLine(`Division: ${user.division}`);
+                await printLine(`Rank: ${user.rank}`);
+                await printLine(`Clearance: ${user.clearance}`);
+            }
+
+            else if (args[0] === "help") {
+                await printLine("Commands:");
+                await printLine("login <username> <password>");
+                await printLine("list");
+                await printLine("open <DOC_ID>");
+                await printLine("whoami");
+            }
+
+            else {
+                await printLine("Unknown command");
+            }
+        }
+
+        (async () => {
+            await printLine("Initializing Secure Terminal...");
+            await printLine("FurrArmy / Reelmind Corp  V.1.0.0");
+            await printLine("Use: login <username> <password>");
+            await printLine("Type 'help' for commands");
+            newInput();
+        })();
+    </script>
+</body>
+</html>
