@@ -8,6 +8,7 @@ monitor.setTextScale(0.5)
 -- ======================
 
 local users = {
+    ["Guest"] = {password="1234", division="Guest", rank="Visitor", clearance=0},
     ["Mike"] = {password="1505", division="Federal Government", rank="FGC-1", clearance=5},
     ["FoxUnit"] = {password="abcd", division="Recon", rank="Scout", clearance=2},
     ["IronPaw"] = {password="pass", division="Engineering", rank="Technician", clearance=3}
@@ -18,6 +19,12 @@ local documents = {
         title="Project Night Fang",
         clearance=5,
         content="Top secret bio-weapon project.\nStatus: ACTIVE"
+    },
+    {
+        title="Guest Info",
+        clearance=0,
+        content="As a guest, you must follow these rules:"
+        content="Be respectful to all members and staff"
     },
     {
         title="Recon Report #17",
