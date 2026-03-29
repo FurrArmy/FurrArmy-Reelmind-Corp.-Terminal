@@ -23,8 +23,7 @@ local documents = {
     {
         title="Guest Info",
         clearance=0,
-        content="As a guest, you must follow these rules:",
-        content="Be respectful to all members and staff"
+        content="As a guest, you must follow these rules: ........."
     },
     {
         title="Recon Report #17",
