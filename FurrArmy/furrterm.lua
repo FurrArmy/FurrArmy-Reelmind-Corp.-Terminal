@@ -3,7 +3,7 @@ local users = require("users")
 local docs = require("docs")
 local utils = require("utils")
 
-mon.setTextScale(1)
+local mon.setTextScale(1)
 utils.clear(mon)
 
 -- Boot animation
